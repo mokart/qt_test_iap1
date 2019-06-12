@@ -138,7 +138,7 @@ void my_Widget::on_pushButton_upgrade_clicked()
 
     openfile.close();
 
-    timeer->start(20);
+    timeer->start(1000);
 
 }
 
@@ -173,7 +173,7 @@ void my_Widget::sendfile_timeout()
             senddata[res_len+4] = checksum;
             senddata[res_len+5] = 0xed;
             serialthread->send_com((const char *)senddata,res_len+6);
-            timeer->start(500);
+            timeer->start(1000);
             qDebug()<<"here";
             sendinfo.send_retry_cnt=0;
         }
@@ -195,7 +195,10 @@ void my_Widget::sendfile_timeout()
             serialthread->send_com((const char *)senddata,res_len+6);
             qDebug()<<"here1";
         }
-        timeer->start(500);
+        timeer->start(1000);
+        openfile.close();
+        return;
+
     }
     if(sendinfo.send_retry_cnt>=3)
     {
@@ -208,3 +211,5 @@ void my_Widget::sendfile_timeout()
 
     openfile.close();
 }
+
+//dd 99 04 01 7b ed

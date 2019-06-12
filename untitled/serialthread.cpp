@@ -61,7 +61,7 @@ void SerialThread::send_com(const char *data, int length)
     //for(int i=0;i<length;i++)
     //    qDebug("%d=,%x",i,(unsigned char)data[i]);
     my_serialport->write(data,length);
-    my_serialport->waitForBytesWritten(2000);
+    my_serialport->waitForBytesWritten(300);
 
 }
 
