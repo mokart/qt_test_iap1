@@ -5,6 +5,7 @@
 #include "crc16.h"
 #include <QMessageBox>
 
+#define DELAY_TIME  500
 my_Widget::my_Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::my_Widget)
@@ -68,6 +69,10 @@ void my_Widget::on_pushButton_sent_clicked()
     serialthread->send_com(ui->lineEdit_serial->text());
 }
 
+
+//获取从单片机接收到的数据
+//比如 dd 99 04 01 7b ed
+
 void my_Widget::receivd_package(QByteArray qba)
 {
     QString str;
@@ -79,7 +84,8 @@ void my_Widget::receivd_package(QByteArray qba)
     }
     ui->textEdit->append(str);
     //qDebug("qba %x",(unsigned char)qba.at(i));
-    sendinfo.sent_ok_package++;
+    sendinfo.sent_ok_package = (unsigned char)qba.at(2)<<8;
+    sendinfo.sent_ok_package |= (unsigned char)qba.at(3);
     qDebug("sendinfo.sent_package = %d",sendinfo.sent_package);
     qDebug("sendinfo.sent_ok_package = %d",sendinfo.sent_ok_package);
 
@@ -96,49 +102,65 @@ void my_Widget::on_pushButton_openfile_clicked()
 
 void my_Widget::on_pushButton_upgrade_clicked()
 {
-    openfile.setFileName(openfileName);
-    openfile.open(QIODevice::ReadOnly);
-    QDataStream in(&openfile);
-    //qDebug("fs:%d", file.size());
-    unsigned char bf[200];
-
-    USHORT rescrc=0xffff;
-    int res_len=200;
-    //int packge=0;
-
-    sendinfo.upfilesize = openfile.size();
-    if(sendinfo.upfilesize == 0)
+    if(ui->pushButton_upgrade->text() == "升级")
     {
-        QMessageBox::warning(NULL, "文件错误", "文件长度是0", QMessageBox::Yes, QMessageBox::Yes);
-        return;
-    }
+        openfile.setFileName(openfileName);
+        openfile.open(QIODevice::ReadOnly);
+        QDataStream in(&openfile);
+        //qDebug("fs:%d", file.size());
+        unsigned char bf[200];
 
-    sendinfo.upfilesize = sendinfo.upfilesize/200+1;
-    if(sendinfo.upfilesize%200 == 0)
-    {
-        sendinfo.upfilesize+=1;
-    }
-
-    //进行获取文件的校验和操作
-    do
-    {
-        res_len = in.readRawData((char *)&bf,res_len);
-        if(res_len != 0)
+        USHORT rescrc=0xffff;
+        int res_len=200;
+        //int packge=0;
+        sendinfo.send_retry_cnt = 0;
+        sendinfo.sent_ok_package = 0;
+        sendinfo.sent_package = 0;
+        sendinfo.upfilesize = openfile.size();
+        if(sendinfo.upfilesize == 0)
         {
-            //进行CRC16校验
-            rescrc = fenduanCRC(bf,200,rescrc);
+            QMessageBox::warning(NULL, "文件错误", "文件长度是0", QMessageBox::Yes, QMessageBox::Yes);
+            return;
         }
-    }while( res_len != 0 );
-
-    ui->label_checksum->setText(QString("rescrc:%1").arg(rescrc,0,16));
-    qDebug("rescrc:%x",rescrc);
-    sendinfo.crc16_H = rescrc>>8;
-    sendinfo.crc16_L = rescrc;
 
 
-    openfile.close();
 
-    timeer->start(1000);
+        sendinfo.package_cnt = sendinfo.upfilesize/200+1;
+        if(sendinfo.upfilesize%200 == 0)
+        {
+            sendinfo.package_cnt+=1;
+        }
+        //qDebug("sendinfo.upfilesize : %d",sendinfo.upfilesize);
+        //qDebug("sendinfo.package_cnt : %d",sendinfo.package_cnt);
+
+        //进行获取文件的校验和操作
+        do
+        {
+            res_len = in.readRawData((char *)&bf,res_len);
+            if(res_len != 0)
+            {
+                //进行CRC16校验
+                rescrc = fenduanCRC(bf,200,rescrc);
+            }
+        }while( res_len != 0 );
+
+        ui->label_checksum->setText(QString("rescrc:%1").arg(rescrc,0,16));
+        qDebug("rescrc:%x",rescrc);
+        sendinfo.crc16_H = rescrc>>8;
+        sendinfo.crc16_L = rescrc;
+
+
+        openfile.close();
+
+        timeer->start(DELAY_TIME);
+        ui->pushButton_upgrade->setText("停止升级");
+    }
+    else
+    {
+        ui->pushButton_upgrade->setText("升级");
+        timeer->stop();
+
+    }
 
 }
 
@@ -148,7 +170,7 @@ void my_Widget::sendfile_timeout()
     unsigned char  senddata[250];
     unsigned char  checksum=0;
     unsigned char  bf[200];
-
+    int i ;
     openfile.setFileName(openfileName);
     openfile.open(QIODevice::ReadOnly);
     QDataStream in(&openfile);
@@ -163,17 +185,24 @@ void my_Widget::sendfile_timeout()
         if(res_len!=0)
         {
             sendinfo.sent_package++;
-            for(int i=0;i<res_len+3;i++)
-                checksum+=bf[i];
+
             //qDebug("res_len :%d",res_len);
             senddata[0] = 0xdd;
             senddata[1] = 0x99;
-            senddata[2] = sendinfo.sent_package;
-            senddata[3] = res_len+3;
-            senddata[res_len+4] = checksum;
-            senddata[res_len+5] = 0xed;
-            serialthread->send_com((const char *)senddata,res_len+6);
-            timeer->start(1000);
+            senddata[2] = sendinfo.sent_package>>8;
+            senddata[3] = sendinfo.sent_package;
+            senddata[4] = res_len+5;
+
+            for(i=0;i<res_len;i++)
+                senddata[5+i] = bf[i];
+
+            for(i=0;i<senddata[4];i++)
+                checksum+=senddata[i];
+
+            senddata[res_len+5] = checksum;
+            senddata[res_len+6] = 0xed;
+            serialthread->send_com((const char *)senddata,res_len+7);
+            timeer->start(DELAY_TIME);
             qDebug()<<"here";
             sendinfo.send_retry_cnt=0;
         }
@@ -183,19 +212,28 @@ void my_Widget::sendfile_timeout()
         sendinfo.send_retry_cnt++;
         if(res_len!=0)
         {
-            for(int i=0;i<res_len+3;i++)
-                checksum+=bf[i];
+            sendinfo.sent_package = sendinfo.sent_ok_package;
+            sendinfo.sent_package++;
+            //qDebug("res_len :%d",res_len);
             //qDebug("res_len :%d",res_len);
             senddata[0] = 0xdd;
             senddata[1] = 0x99;
-            senddata[2] = sendinfo.sent_package;
-            senddata[3] = res_len+3;
-            senddata[res_len+4] = checksum;
-            senddata[res_len+5] = 0xed;
-            serialthread->send_com((const char *)senddata,res_len+6);
+            senddata[2] = sendinfo.sent_package>>8;
+            senddata[3] = sendinfo.sent_package;
+            senddata[4] = res_len+5;
+
+            for(i=0;i<res_len;i++)
+                senddata[5+i] = bf[i];
+
+            for(i=0;i<senddata[4];i++)
+                checksum+=senddata[i];
+
+            senddata[res_len+5] = checksum;
+            senddata[res_len+6] = 0xed;
+            serialthread->send_com((const char *)senddata,res_len+7);
+            timeer->start(DELAY_TIME);
             qDebug()<<"here1";
         }
-        timeer->start(1000);
         openfile.close();
         return;
 

@@ -44,7 +44,7 @@ void SerialThread::opencom(QString strcom)
 void SerialThread::closecom()
 {
     stopped = true;
-    this->wait(500);
+    this->wait();
     my_serialport->close();
 
 }
@@ -61,7 +61,7 @@ void SerialThread::send_com(const char *data, int length)
     //for(int i=0;i<length;i++)
     //    qDebug("%d=,%x",i,(unsigned char)data[i]);
     my_serialport->write(data,length);
-    my_serialport->waitForBytesWritten(300);
+    my_serialport->waitForBytesWritten(800);
 
 }
 
@@ -77,7 +77,7 @@ void SerialThread::run()
 
     while(false == stopped)
     {
-        my_serialport->waitForReadyRead(500);
+        my_serialport->waitForReadyRead(1);
         tmp_data = my_serialport->read(1);
         if(tmp_data.size() != 0  )
         {
@@ -102,10 +102,10 @@ void SerialThread::run()
             //如果正确接受到了数据
             if((unsigned char)qba_rcv.data()[0] == 0xdd && (unsigned char)qba_rcv.at(qba_rcv.size()-1)==0xed && qba_rcv.size()>3)
             {
-                for(i=0;i<(unsigned char)qba_rcv.at(2);i++)
+                for(i=0;i<(unsigned char)qba_rcv.at(4);i++)
                     checksum += qba_rcv.at(i);
 
-                if(checksum != (unsigned char)qba_rcv.at(qba_rcv.at(2)))
+                if(checksum != (unsigned char)qba_rcv.at(qba_rcv.at(4)))
                 {
                    qba_rcv.clear();
                    checksum=0;
