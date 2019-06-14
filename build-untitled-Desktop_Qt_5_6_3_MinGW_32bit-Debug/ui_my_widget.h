@@ -17,6 +17,7 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QProgressBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QTextEdit>
 #include <QtWidgets/QWidget>
@@ -35,6 +36,7 @@ public:
     QPushButton *pushButton_openfile;
     QPushButton *pushButton_upgrade;
     QLabel *label_checksum;
+    QProgressBar *progressBar;
 
     void setupUi(QWidget *my_Widget)
     {
@@ -68,6 +70,10 @@ public:
         label_checksum = new QLabel(my_Widget);
         label_checksum->setObjectName(QStringLiteral("label_checksum"));
         label_checksum->setGeometry(QRect(270, 440, 61, 31));
+        progressBar = new QProgressBar(my_Widget);
+        progressBar->setObjectName(QStringLiteral("progressBar"));
+        progressBar->setGeometry(QRect(240, 390, 118, 23));
+        progressBar->setValue(24);
 
         retranslateUi(my_Widget);
 
@@ -79,7 +85,7 @@ public:
         my_Widget->setWindowTitle(QApplication::translate("my_Widget", "my_Widget", Q_NULLPTR));
         btnOpen->setText(QApplication::translate("my_Widget", "\346\211\223\345\274\200\344\270\262\345\217\243", Q_NULLPTR));
         pushButton_sent->setText(QApplication::translate("my_Widget", "\345\217\221\351\200\201", Q_NULLPTR));
-        pushButton_openfile->setText(QApplication::translate("my_Widget", "\346\211\223\345\274\200\346\226\207\344\273\266", Q_NULLPTR));
+        pushButton_openfile->setText(QApplication::translate("my_Widget", "\351\200\211\346\213\251\346\226\207\344\273\266", Q_NULLPTR));
         pushButton_upgrade->setText(QApplication::translate("my_Widget", "\345\215\207\347\272\247", Q_NULLPTR));
         label_checksum->setText(QApplication::translate("my_Widget", "TextLabel", Q_NULLPTR));
     } // retranslateUi

@@ -19,6 +19,10 @@ my_Widget::my_Widget(QWidget *parent) :
     sendinfo.send_retry_cnt=0;
     sendinfo.sent_package = 0;
     sendinfo.sent_ok_package = 0;
+    ui->progressBar->setMaximum(0);
+    ui->progressBar->setMinimum(0);
+    ui->pushButton_upgrade->setEnabled(false);
+
 }
 
 my_Widget::~my_Widget()
@@ -33,6 +37,7 @@ void my_Widget::on_btnOpen_clicked()
        {
            serialthread->opencom(ui->cmbPortName->currentText());
            ui->btnOpen->setText("关闭串口");
+           ui->pushButton_upgrade->setEnabled(true);
        }
        else
        {
@@ -86,6 +91,7 @@ void my_Widget::receivd_package(QByteArray qba)
     //qDebug("qba %x",(unsigned char)qba.at(i));
     sendinfo.sent_ok_package = (unsigned char)qba.at(2)<<8;
     sendinfo.sent_ok_package |= (unsigned char)qba.at(3);
+    ui->progressBar->setValue( sendinfo.sent_ok_package );
     qDebug("sendinfo.sent_package = %d",sendinfo.sent_package);
     qDebug("sendinfo.sent_ok_package = %d",sendinfo.sent_ok_package);
 
@@ -113,6 +119,8 @@ void my_Widget::on_pushButton_upgrade_clicked()
         USHORT rescrc=0xffff;
         int res_len=200;
         //int packge=0;
+
+
         sendinfo.send_retry_cnt = 0;
         sendinfo.sent_ok_package = 0;
         sendinfo.sent_package = 0;
@@ -130,6 +138,10 @@ void my_Widget::on_pushButton_upgrade_clicked()
         {
             sendinfo.package_cnt+=1;
         }
+
+        ui->progressBar->setMinimum(0);
+        ui->progressBar->setMaximum( sendinfo.package_cnt );
+
         //qDebug("sendinfo.upfilesize : %d",sendinfo.upfilesize);
         //qDebug("sendinfo.package_cnt : %d",sendinfo.package_cnt);
 
@@ -158,6 +170,8 @@ void my_Widget::on_pushButton_upgrade_clicked()
     else
     {
         ui->pushButton_upgrade->setText("升级");
+        ui->progressBar->setMaximum(0);
+        ui->progressBar->setMinimum(0);
         timeer->stop();
 
     }
@@ -189,14 +203,14 @@ void my_Widget::sendfile_timeout()
             //qDebug("res_len :%d",res_len);
             senddata[0] = 0xdd;
             senddata[1] = 0x99;
-            senddata[2] = sendinfo.sent_package>>8;
-            senddata[3] = sendinfo.sent_package;
-            senddata[4] = res_len+5;
+            senddata[2] = res_len+5;
+            senddata[3] = sendinfo.sent_package>>8;
+            senddata[4] = sendinfo.sent_package;
 
             for(i=0;i<res_len;i++)
                 senddata[5+i] = bf[i];
-
-            for(i=0;i<senddata[4];i++)
+            checksum=0;
+            for(i=0;i<senddata[2];i++)
                 checksum+=senddata[i];
 
             senddata[res_len+5] = checksum;
@@ -205,6 +219,42 @@ void my_Widget::sendfile_timeout()
             timeer->start(DELAY_TIME);
             qDebug()<<"here";
             sendinfo.send_retry_cnt=0;
+        }
+        else
+        {
+            if( (sendinfo.sent_package == sendinfo.sent_ok_package) &&  (sendinfo.sent_ok_package == sendinfo.package_cnt) )
+            {
+                unsigned char  senddata[11];
+                senddata[0] = 0xdd;
+                senddata[1] = 0x98;
+                senddata[2] = 0x9;
+                senddata[3] = sendinfo.upfilesize>>24;
+                senddata[4] = sendinfo.upfilesize>>16;
+                senddata[5] = sendinfo.upfilesize>>8;
+                senddata[6] = sendinfo.upfilesize;
+                senddata[7] = sendinfo.crc16_H;
+                senddata[8] = sendinfo.crc16_L;
+                unsigned char sum=0;
+                for(int i=0;i<senddata[2];i++)
+                {
+                    sum+=senddata[i];
+                }
+                senddata[9] = sum;
+                senddata[10] = 0xed;
+                serialthread->send_com((const char *)senddata,11);
+
+                for(i=0;i<11;i++)
+                {
+                     qDebug("sd:%x",senddata[i]);
+                }
+
+                timeer->stop();
+                sendinfo.send_retry_cnt = 0;
+                sendinfo.sent_ok_package = 0;
+                sendinfo.sent_package = 0;
+                qDebug()<<"updata_ok";
+
+            }
         }
     }
     else if( (sendinfo.sent_ok_package != sendinfo.sent_package) && (sendinfo.send_retry_cnt<3) )
@@ -218,18 +268,19 @@ void my_Widget::sendfile_timeout()
             //qDebug("res_len :%d",res_len);
             senddata[0] = 0xdd;
             senddata[1] = 0x99;
-            senddata[2] = sendinfo.sent_package>>8;
-            senddata[3] = sendinfo.sent_package;
-            senddata[4] = res_len+5;
-
+            senddata[2] = res_len+5;
+            senddata[3] = sendinfo.sent_package>>8;
+            senddata[4] = sendinfo.sent_package;
             for(i=0;i<res_len;i++)
                 senddata[5+i] = bf[i];
 
-            for(i=0;i<senddata[4];i++)
+            checksum = 0;
+            for(i=0;i<senddata[2];i++)
                 checksum+=senddata[i];
 
             senddata[res_len+5] = checksum;
             senddata[res_len+6] = 0xed;
+
             serialthread->send_com((const char *)senddata,res_len+7);
             timeer->start(DELAY_TIME);
             qDebug()<<"here1";
