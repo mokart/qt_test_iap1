@@ -112,6 +112,7 @@ void my_Widget::on_pushButton_upgrade_clicked()
     {
         openfile.setFileName(openfileName);
         openfile.open(QIODevice::ReadOnly);
+        openfile.seek(0);
         QDataStream in(&openfile);
         //qDebug("fs:%d", file.size());
         unsigned char bf[200];
@@ -148,11 +149,12 @@ void my_Widget::on_pushButton_upgrade_clicked()
         //进行获取文件的校验和操作
         do
         {
+            res_len = 200;
             res_len = in.readRawData((char *)&bf,res_len);
             if(res_len != 0)
             {
                 //进行CRC16校验
-                rescrc = fenduanCRC(bf,200,rescrc);
+                rescrc = fenduanCRC(bf,res_len,rescrc);
             }
         }while( res_len != 0 );
         qDebug("sendinfo.package_cnt :%d",sendinfo.package_cnt);
@@ -187,14 +189,15 @@ void my_Widget::sendfile_timeout()
     int i ;
     openfile.setFileName(openfileName);
     openfile.open(QIODevice::ReadOnly);
-    QDataStream in(&openfile);
 
     int res_len = 200;
 
     //发送到串口进行升级
-    if((sendinfo.sent_ok_package == sendinfo.sent_package) && (sendinfo.package_cnt!= sendinfo.sent_ok_package) )
+    if((sendinfo.sent_ok_package == sendinfo.sent_package) && (sendinfo.package_cnt!= sendinfo.sent_ok_package) )//第一次
     {
         openfile.seek(200*sendinfo.sent_ok_package);
+        QDataStream in(&openfile);
+        res_len = 200;
         res_len = in.readRawData((char *)&bf,res_len);
         if(res_len!=0)
         {
@@ -221,8 +224,12 @@ void my_Widget::sendfile_timeout()
             sendinfo.send_retry_cnt=0;
         }
     }
-    else if( (sendinfo.sent_ok_package != sendinfo.sent_package) && (sendinfo.send_retry_cnt<3) )
+    else if( (sendinfo.sent_ok_package != sendinfo.sent_package) && (sendinfo.send_retry_cnt<3) )//重试
     {
+        openfile.seek(200*sendinfo.sent_ok_package);
+        QDataStream in(&openfile);
+        res_len=200;
+        res_len = in.readRawData((char *)&bf,res_len);
         sendinfo.send_retry_cnt++;
         if(res_len!=0)
         {

@@ -69,7 +69,7 @@ public:
         pushButton_upgrade->setGeometry(QRect(400, 450, 75, 23));
         label_checksum = new QLabel(my_Widget);
         label_checksum->setObjectName(QStringLiteral("label_checksum"));
-        label_checksum->setGeometry(QRect(270, 440, 61, 31));
+        label_checksum->setGeometry(QRect(230, 440, 101, 31));
         progressBar = new QProgressBar(my_Widget);
         progressBar->setObjectName(QStringLiteral("progressBar"));
         progressBar->setGeometry(QRect(240, 390, 118, 23));
