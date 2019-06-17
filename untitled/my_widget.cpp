@@ -131,7 +131,7 @@ void my_Widget::on_pushButton_upgrade_clicked()
             QMessageBox::warning(NULL, "文件错误", "文件长度是0", QMessageBox::Yes, QMessageBox::Yes);
             return;
         }
-
+        ui->label_filesize->setText(QString::number(sendinfo.upfilesize,10));
 
 
         sendinfo.package_cnt = sendinfo.upfilesize/200+1;
@@ -171,6 +171,8 @@ void my_Widget::on_pushButton_upgrade_clicked()
     }
     else
     {
+        sendinfo.sent_ok_package=0;
+        sendinfo.sent_package=0;
         ui->pushButton_upgrade->setText("升级");
         ui->progressBar->setMaximum(0);
         ui->progressBar->setMinimum(0);
@@ -292,7 +294,8 @@ void my_Widget::sendfile_timeout()
         sendinfo.sent_package = 0;
         qDebug()<<"updata_ok";
         ui->pushButton_upgrade->setText("升级");
-
+        ui->btnOpen->setText("打开串口");
+        serialthread->closecom();
     }
 
 

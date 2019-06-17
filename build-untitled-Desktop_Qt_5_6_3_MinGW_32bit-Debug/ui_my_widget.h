@@ -37,12 +37,15 @@ public:
     QPushButton *pushButton_upgrade;
     QLabel *label_checksum;
     QProgressBar *progressBar;
+    QLabel *label;
+    QLabel *label_2;
+    QLabel *label_filesize;
 
     void setupUi(QWidget *my_Widget)
     {
         if (my_Widget->objectName().isEmpty())
             my_Widget->setObjectName(QStringLiteral("my_Widget"));
-        my_Widget->resize(738, 554);
+        my_Widget->resize(694, 496);
         cmbPortName = new QComboBox(my_Widget);
         cmbPortName->setObjectName(QStringLiteral("cmbPortName"));
         cmbPortName->setGeometry(QRect(30, 50, 69, 22));
@@ -69,11 +72,20 @@ public:
         pushButton_upgrade->setGeometry(QRect(400, 450, 75, 23));
         label_checksum = new QLabel(my_Widget);
         label_checksum->setObjectName(QStringLiteral("label_checksum"));
-        label_checksum->setGeometry(QRect(230, 440, 101, 31));
+        label_checksum->setGeometry(QRect(470, 400, 101, 31));
         progressBar = new QProgressBar(my_Widget);
         progressBar->setObjectName(QStringLiteral("progressBar"));
-        progressBar->setGeometry(QRect(240, 390, 118, 23));
+        progressBar->setGeometry(QRect(120, 390, 118, 23));
         progressBar->setValue(24);
+        label = new QLabel(my_Widget);
+        label->setObjectName(QStringLiteral("label"));
+        label->setGeometry(QRect(400, 410, 54, 12));
+        label_2 = new QLabel(my_Widget);
+        label_2->setObjectName(QStringLiteral("label_2"));
+        label_2->setGeometry(QRect(390, 380, 54, 12));
+        label_filesize = new QLabel(my_Widget);
+        label_filesize->setObjectName(QStringLiteral("label_filesize"));
+        label_filesize->setGeometry(QRect(470, 380, 54, 12));
 
         retranslateUi(my_Widget);
 
@@ -87,7 +99,10 @@ public:
         pushButton_sent->setText(QApplication::translate("my_Widget", "\345\217\221\351\200\201", Q_NULLPTR));
         pushButton_openfile->setText(QApplication::translate("my_Widget", "\351\200\211\346\213\251\346\226\207\344\273\266", Q_NULLPTR));
         pushButton_upgrade->setText(QApplication::translate("my_Widget", "\345\215\207\347\272\247", Q_NULLPTR));
-        label_checksum->setText(QApplication::translate("my_Widget", "TextLabel", Q_NULLPTR));
+        label_checksum->setText(QApplication::translate("my_Widget", "0", Q_NULLPTR));
+        label->setText(QApplication::translate("my_Widget", "CRC16:", Q_NULLPTR));
+        label_2->setText(QApplication::translate("my_Widget", "filesize:", Q_NULLPTR));
+        label_filesize->setText(QApplication::translate("my_Widget", "0", Q_NULLPTR));
     } // retranslateUi
 
 };

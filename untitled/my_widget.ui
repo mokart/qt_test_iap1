@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>738</width>
-    <height>554</height>
+    <width>694</width>
+    <height>496</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -108,20 +108,20 @@
   <widget class="QLabel" name="label_checksum">
    <property name="geometry">
     <rect>
-     <x>230</x>
-     <y>440</y>
+     <x>470</x>
+     <y>400</y>
      <width>101</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0</string>
    </property>
   </widget>
   <widget class="QProgressBar" name="progressBar">
    <property name="geometry">
     <rect>
-     <x>240</x>
+     <x>120</x>
      <y>390</y>
      <width>118</width>
      <height>23</height>
@@ -129,6 +129,45 @@
    </property>
    <property name="value">
     <number>24</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>400</x>
+     <y>410</y>
+     <width>54</width>
+     <height>12</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>CRC16:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>380</y>
+     <width>54</width>
+     <height>12</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>filesize:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_filesize">
+   <property name="geometry">
+    <rect>
+     <x>470</x>
+     <y>380</y>
+     <width>54</width>
+     <height>12</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>0</string>
    </property>
   </widget>
  </widget>
